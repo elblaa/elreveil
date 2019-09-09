@@ -5,7 +5,7 @@ import vlc
 from time import sleep
 from datetime import datetime, time, date, timedelta
 import pydub
-from pydub.playback import _play_with_simpleaudio
+
 
 class SoundTrigger:
     songs_path = None

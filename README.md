@@ -4,6 +4,10 @@ Simple python 3.7 alarm clock designed to be used with raspberry pi + push butto
 
 TODO : improve description
 
+## Features
+
+TODO
+
 ## Installation
 
 TODO
@@ -24,4 +28,5 @@ TODO
  - Demo on 5s push
  - Reload configuration on 3s push
  - Display light after alarm triggered (configurable)
- - Set use GPIO variable in configuration instead of code
+ - Set use GPIO variable in configuration instead of code.
+ - tts initialisation

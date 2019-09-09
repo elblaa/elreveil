@@ -26,8 +26,8 @@ class RecurrentAlarm:
             self.days = sorted(configuration["days"])
         if "hour" in configuration:
             self.hour = time.fromisoformat(configuration["hour"])
-        for i, inhibitor in self.inhibitors:
-            inhibitor.load_configuration(configuration["inhibitors"][i], runtime["inhibitors"][i])
+        for i in range(len(self.inhibitors)):
+            self.inhibitors[i].load_configuration(configuration["inhibitors"][i], runtime["inhibitors"][i])
 
     def __init__(self, configuration, runtime):
         self.load_configuration(configuration, runtime)

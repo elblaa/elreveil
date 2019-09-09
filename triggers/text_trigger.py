@@ -40,8 +40,8 @@ class TextTrigger:
         self.tts_path = configuration["ttsPath"]
         if "stringCurrentTime" in configuration:
             self.current_time_str = configuration["stringCurrentTime"]
-        for i, data_source in self.data_sources:
-            data_source.load_configuration(
+        for i in range(len(self.data_sources)):
+            self.data_sources[i].load_configuration(
                 configuration["data"][i], runtime["data"][i])
 
     def __init__(self, configuration, runtime):

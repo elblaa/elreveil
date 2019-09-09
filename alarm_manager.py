@@ -1,6 +1,8 @@
 from sources import recurrent_alarm, temporary_alarm
 from triggers import sound_trigger, text_trigger, light_trigger
 from datetime import datetime, time, date, timedelta
+import json
+import os
 
 class AlarmManager:
     alarm_in_progress = False
@@ -43,14 +45,48 @@ class AlarmManager:
                 self.last_alert = datetime.fromisoformat(runtime["lastAlert"])
 
     def load_configuration(self, configuration, runtime):
-        for i, source in self.sources:
-            source.load_configuration(
+        for i in range(len(self.sources)):
+            self.sources[i].load_configuration(
                 configuration["sources"][i], runtime["sources"][i])
-        for i, trigger in self.triggers:
-            trigger.load_configuration(
+        for i in range(len(self.triggers)):
+            self.triggers[i].load_configuration(
                 configuration["triggers"][i], runtime["triggers"][i])
 
-    def __init__(self, configuration, runtime):        
+    def get_configuration_files(self):
+        with open('configuration.json') as data:
+            configuration = json.load(data)
+            runtime = self.get_runtime()
+            return (configuration, runtime)
+
+    def get_runtime(self):
+        runtime_default = {
+            "alarmManager": {
+                "sources": [{"inhibitors": [{}] },{}],
+                "triggers": [
+                    {},
+                    {                
+                    },
+                    {
+                        "data":[{},{},{}],
+                        "ttsModules": [{},{},{}]
+                    }
+                    ]
+            }
+        }
+        if (os.path.exists("runtime.json")):
+            try:
+                with open('runtime.json') as data:
+                    return json.load(data)
+            except:
+                os.remove("runtime.json")
+                return runtime_default        
+        else:
+            return runtime_default        
+
+    def __init__(self):        
+        files = self.get_configuration_files()
+        configuration = files[0]["alarmManager"]
+        runtime = files[1]["alarmManager"]
         self.sources.append(recurrent_alarm.RecurrentAlarm(
             configuration["sources"][0], runtime["sources"][0]))
         self.sources.append(temporary_alarm.TemporaryAlarm(
@@ -96,7 +132,7 @@ class AlarmManager:
                 and time_difference < 3 * 60 * 60):
             self.trigger_alert()
 
-    def input_action(self):
+    def input_action(self, input_duration):
         if (self.alarm_in_progress):
             self.alarm_in_progress = False
             print("Alarm stopped")
@@ -104,6 +140,11 @@ class AlarmManager:
                 trigger.stop_alarm()
             for trigger in self.triggers:
                 trigger.post_alarm()
+            self.update_next_alarm()
+        elif input_duration.total_seconds() >= 2:
+            print("Reload configuration...")
+            files = self.get_configuration_files()
+            self.load_configuration(files[0]["alarmManager"], files[1]["alarmManager"])
             self.update_next_alarm()
         else:
             for trigger in self.triggers:

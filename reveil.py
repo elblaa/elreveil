@@ -5,13 +5,17 @@ import alarm_manager
 import json
 import os
 import gpiozero
+from datetime import datetime
+import vlc
 
 # constants
 sleep_time = 0.1
-use_gpio = True
+use_gpio = False
 
 # Globals
 button_pressed = False
+button_pressed_start = None
+button_pressed_step_configuration = False
 alarm_manager_obj = None
 configuration = None
 button_pin = 18
@@ -25,12 +29,22 @@ def button_status_debug():
     return keyboard.is_pressed('end')
 
 def listen_inputs():
-    global button_pressed
-    if not button_pressed and check_button_pressed():         
+    global button_pressed, button_pressed_start, button_pressed_step_configuration
+    button_is_pressed = check_button_pressed()
+    if not button_pressed and button_is_pressed:    
+        button_pressed_start = datetime.now()     
+        button_pressed_step_configuration = False   
         button_pressed = True
-    elif button_pressed and not check_button_pressed():
+    elif button_pressed and not button_is_pressed:
         button_pressed = False
-        alarm_manager_obj.input_action()
+        button_pressed_duration = datetime.now() - button_pressed_start
+        alarm_manager_obj.input_action(button_pressed_duration)
+    elif button_pressed and button_is_pressed and (datetime.now() - button_pressed_start ).total_seconds() >= 2 and not button_pressed_step_configuration:
+        button_pressed_step_configuration = True
+        media = vlc.MediaPlayer("configuration.wav")   
+        media.audio_set_volume(100)
+        media.play()
+    
 
 def check_runtime():
     if (alarm_manager_obj.check_runtime()):
@@ -74,39 +88,13 @@ def write_default_configuration():
     with open('configuration.json', 'w') as outfile:      
         json.dump(data,outfile)
 
-def get_runtime():
-    runtime_default = {
-        "alarmManager": {
-            "sources": [{"inhibitors": [{}] },{}],
-            "triggers": [
-                {},
-                {                
-                },
-                {
-                    "data":[{},{},{}],
-                    "ttsModules": [{},{},{}]
-                }
-                ]
-        }
-    }
-    if (os.path.exists("runtime.json")):
-        try:
-            with open('runtime.json') as data:
-                return json.load(data)
-        except:
-            os.remove("runtime.json")
-            return runtime_default        
-    else:
-        return runtime_default
-
 def init():
     global configuration, alarm_manager_obj, button_pin, button, check_button_pressed
     if (not os.path.exists("configuration.json")):
         write_default_configuration()
     with open('configuration.json') as data:
         configuration = json.load(data)
-    runtime = get_runtime()
-    alarm_manager_obj = alarm_manager.AlarmManager(configuration["alarmManager"], runtime["alarmManager"])
+    alarm_manager_obj = alarm_manager.AlarmManager()
     if not use_gpio:
         check_button_pressed = button_status_debug
     else :
