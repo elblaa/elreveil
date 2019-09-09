@@ -1,0 +1,12 @@
+﻿__pycache__
+.vscode
+tts_data
+runtime.json
+configuration.json
+configuration - Copie.json
+test_light.py
+test_light_simple.py
+test_sound.py
+test_tts.py
+default.mp3
+passw.py
