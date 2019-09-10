@@ -23,6 +23,7 @@ class LightTrigger(Thread):
     gpio_red = None
     gpio_green = None
     gpio_blue = None
+    processing_light_data = False
 
     light_data = "light_data"
     time_range = 0.05
@@ -183,7 +184,7 @@ class LightTrigger(Thread):
             return
         elif self.song_loaded == self.sound_trigger.next_song:
             return
-
+        self.processing_light_data = True
         file_data_path = os.path.join(self.light_data, os.path.basename(self.sound_trigger.next_song)+".lightdata")
         file_info_data_path = os.path.join(self.light_data, os.path.basename(self.sound_trigger.next_song)+".json")
         if os.path.exists(file_data_path):
@@ -192,6 +193,7 @@ class LightTrigger(Thread):
             with open(file_info_data_path) as data:
                 self.frame_rate = json.load(data)["frameRate"]
             self.song_loaded = self.sound_trigger.next_song
+            self.processing_light_data = False
         else:
             start_date = datetime.now()
             print("Getting light data from {0}...".format(self.sound_trigger.next_song))
@@ -205,7 +207,6 @@ class LightTrigger(Thread):
             song_data_sampled = numpy.array_split(song_data,  number)
             self.song_data = []
             maximum = song_object.max
-
             hue_offset = sum(map(ord,self.sound_trigger.next_song))
  
             frequencies= numpy.fft.rfftfreq(fftsize,d = 1./song_object.frame_rate)
@@ -215,7 +216,7 @@ class LightTrigger(Thread):
             index_end_freq = numpy.searchsorted(frequencies,self.freq_end, side='right')
             if index_end_freq < len(frequencies) and frequencies[index_start_freq] < self.freq_start:
                 index_end_freq += 1
- 
+
             pitch = [27.500,29.135,30.868,32.703,34.648,36.708,38.891,41.204,43.654,46.249,48.999,51.913] #Equal temperament : https://www.dolmetsch.com/musictheory27.htm
 
             pitch_color_interval = float(self.pitch_color_max)/len(pitch)
@@ -245,15 +246,17 @@ class LightTrigger(Thread):
                             num_octave += 1
                     hue = (hue_offset + pitch_color[index_pitch]  ) % 360  / 360      
         
-                    peak = max(0,min(1, peak))
-                    #saturation = max(0,min(1, 0.7 + saturation))
-                    self.song_data.append([peak, saturation, hue])
+                peak = max(0,min(1, peak))
+                #saturation = max(0,min(1, 0.7 + saturation))
+                self.song_data.append([peak, saturation, hue])
+
             
             with open(file_data_path,"wb") as fd:
                 pickle.dump(self.song_data,fd)
             with open(file_info_data_path, 'w') as outfile:      
                 json.dump({"frameRate": song_object.frame_rate},outfile)
             self.song_loaded = self.sound_trigger.next_song     
+            self.processing_light_data = False
             print("Light data for {0} written in {1} seconds".format(self.sound_trigger.next_song, (datetime.now() - start_date).total_seconds()))   
 
     def run(self):

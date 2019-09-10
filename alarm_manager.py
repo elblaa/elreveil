@@ -3,6 +3,7 @@ from triggers import sound_trigger, text_trigger, light_trigger
 from datetime import datetime, time, date, timedelta
 import json
 import os
+from time import sleep
 
 class AlarmManager:
     alarm_in_progress = False
@@ -13,7 +14,11 @@ class AlarmManager:
     last_fetch = datetime.min
     last_alert = datetime.min
     runtime_updated = False
-
+    demo_in_progress = False
+    demo_song = None
+    demo_started = False
+    demo_start_time = None
+    
     def dump_runtime(self):
         self.runtime_updated = False
         sources = []
@@ -122,15 +127,30 @@ class AlarmManager:
         self.runtime_updated = True
 
     def think(self):
-        if self.last_fetch.date() < date.today():
-            self.update_next_alarm()
+        if self.demo_in_progress:
+            if self.demo_song is None:
+                self.triggers[0].select_demo_song()
+                self.demo_song = self.triggers[0].next_song    
+                self.demo_started = False
+                self.demo_start_time = datetime.now()
+            elif not self.demo_started and (datetime.now() - self.demo_start_time).total_seconds() >= 3 and not self.triggers[1].processing_light_data:
+                self.demo_started = True
+                self.demo_start_time = datetime.now()
+                self.triggers[0].start_alarm("Demo")
+                self.triggers[1].start_alarm("Demo")
+            elif self.demo_started and (datetime.now() - self.demo_start_time).total_seconds() >= 3  and not self.triggers[0].song_object.is_playing():
+                self.triggers[1].stop_alarm()
+                self.demo_song = None
+        else:
+            if self.last_fetch.date() < date.today():
+                self.update_next_alarm()
 
-        time_difference = (datetime.now() - self.next_alarm).total_seconds()
+            time_difference = (datetime.now() - self.next_alarm).total_seconds()
 
-        if(self.last_alert < self.next_alarm
-                and time_difference >= 0
-                and time_difference < 3 * 60 * 60):
-            self.trigger_alert()
+            if(self.last_alert < self.next_alarm
+                    and time_difference >= 0
+                    and time_difference < 3 * 60 * 60):
+                self.trigger_alert()
 
     def input_action(self, input_duration):
         if (self.alarm_in_progress):
@@ -141,11 +161,32 @@ class AlarmManager:
             for trigger in self.triggers:
                 trigger.post_alarm()
             self.update_next_alarm()
-        elif input_duration.total_seconds() >= 2:
-            print("Reload configuration...")
-            files = self.get_configuration_files()
-            self.load_configuration(files[0]["alarmManager"], files[1]["alarmManager"])
-            self.update_next_alarm()
+        elif input_duration.total_seconds() >= 2 and input_duration.total_seconds() < 6:
+            if self.demo_in_progress:
+                print("Stopping demo")
+                self.demo_in_progress = False
+                self.triggers[0].stop_alarm()
+                self.triggers[1].stop_alarm()
+                self.triggers[0].select_new_song(self.next_alarm_type)
+            else:
+                print("Reload configuration...")
+                files = self.get_configuration_files()
+                self.load_configuration(files[0]["alarmManager"], files[1]["alarmManager"])
+                self.update_next_alarm()
+        elif input_duration.total_seconds() >= 6:
+            if self.demo_in_progress:
+                print("Stopping demo")
+                self.demo_in_progress = False
+                self.triggers[0].stop_alarm()
+                self.triggers[1].stop_alarm()
+            else:
+                print("Starting demo...")
+                self.demo_in_progress = True
+                self.demo_song = None
+        elif self.demo_in_progress:
+            self.triggers[0].stop_alarm()
+            self.triggers[1].stop_alarm()
+            self.demo_song = None
         else:
             for trigger in self.triggers:
                 trigger.display_time(datetime.now(), self.next_alarm)

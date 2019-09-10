@@ -18,6 +18,7 @@ class SoundTrigger:
     last_category_fetch = datetime.min
     last_song_updated = datetime.min
     runtime_updated = False
+    demo_path = None
 
     def dump_runtime(self):
         self.runtime_updated = False
@@ -58,6 +59,8 @@ class SoundTrigger:
                 if "songsCategory" in alarm_type:
                     selection.songs_category = alarm_type["songsCategory"]
                 self.selection_type_by_alarm_type.append(selection)
+        if "demoPath" in configuration:
+            self.demo_path = configuration["demoPath"]
         self.load_runtime(runtime)
 
     def __init__(self, configuration, runtime):
@@ -108,9 +111,16 @@ class SoundTrigger:
             print("There is no songs in {0}".format(path))
             self.next_song = "default.mp3"
 
+    def select_demo_song(self):
+        if self.demo_path is None:
+            self.demo_path = self.songs_path
+        self.select_random_song_in_path(self.demo_path)
+        self.song_object = vlc.MediaPlayer(self.next_song)   
+
     def start_alarm(self, alarm_type):
         if self.next_song is None:            
-            self.select_new_song(alarm_type)            
+            self.select_new_song(alarm_type)      
+        print("Playing {0}".format(self.next_song))      
         self.song_object.audio_set_volume(100)          
         self.song_object.play()
 

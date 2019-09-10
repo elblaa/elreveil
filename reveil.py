@@ -10,12 +10,13 @@ import vlc
 
 # constants
 sleep_time = 0.1
-use_gpio = False
+use_gpio = True
 
 # Globals
 button_pressed = False
 button_pressed_start = None
 button_pressed_step_configuration = False
+button_pressed_step_demo = False
 alarm_manager_obj = None
 configuration = None
 button_pin = 18
@@ -29,11 +30,12 @@ def button_status_debug():
     return keyboard.is_pressed('end')
 
 def listen_inputs():
-    global button_pressed, button_pressed_start, button_pressed_step_configuration
+    global button_pressed, button_pressed_start, button_pressed_step_configuration, button_pressed_step_demo
     button_is_pressed = check_button_pressed()
     if not button_pressed and button_is_pressed:    
         button_pressed_start = datetime.now()     
-        button_pressed_step_configuration = False   
+        button_pressed_step_configuration = False  
+        button_pressed_step_demo = False 
         button_pressed = True
     elif button_pressed and not button_is_pressed:
         button_pressed = False
@@ -42,6 +44,11 @@ def listen_inputs():
     elif button_pressed and button_is_pressed and (datetime.now() - button_pressed_start ).total_seconds() >= 2 and not button_pressed_step_configuration:
         button_pressed_step_configuration = True
         media = vlc.MediaPlayer("configuration.wav")   
+        media.audio_set_volume(100)
+        media.play()
+    elif button_pressed and button_is_pressed and (datetime.now() - button_pressed_start ).total_seconds() >= 6 and not button_pressed_step_demo:
+        button_pressed_step_demo = True
+        media = vlc.MediaPlayer("demo.wav")   
         media.audio_set_volume(100)
         media.play()
     
@@ -89,11 +96,13 @@ def write_default_configuration():
         json.dump(data,outfile)
 
 def init():
-    global configuration, alarm_manager_obj, button_pin, button, check_button_pressed
+    global configuration, alarm_manager_obj, button_pin, button, check_button_pressed, use_gpio
     if (not os.path.exists("configuration.json")):
         write_default_configuration()
     with open('configuration.json') as data:
         configuration = json.load(data)
+    if "useGPIO" in configuration:
+        use_gpio = configuration["useGPIO"]
     alarm_manager_obj = alarm_manager.AlarmManager()
     if not use_gpio:
         check_button_pressed = button_status_debug
