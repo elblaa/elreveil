@@ -97,7 +97,7 @@ class WikiQuoteData(Thread, TextData):
             self.error_code = None
             self.runtime_updated = True
         self.nb_error = 0
-        print("Wikiquote : "+self.data_str.format(self.author, self.category, self.quote))
+        print("["+datetime.now().isoformat()+"] Wikiquote : "+self.data_str.format(self.author, self.category, self.quote))
         
     def run(self):
         while True:

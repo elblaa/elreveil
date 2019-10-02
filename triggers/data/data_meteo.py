@@ -77,7 +77,7 @@ class MeteoFranceData(Thread, TextData):
             self.error_code = None
             self.runtime_updated = True
         self.nb_error = 0
-        print("Meteo france : "+self.data_str.format(self.min_temp, self.max_temp, self.weather))
+        print("["+datetime.now().isoformat()+"] Meteo france : "+self.data_str.format(self.min_temp, self.max_temp, self.weather))
         
     def run(self):
         while True:

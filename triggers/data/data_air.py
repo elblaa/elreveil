@@ -60,7 +60,7 @@ class AirRhoneAlpesData(Thread, TextData):
             self.error_code = None
             self.runtime_updated = True
         self.nb_error = 0
-        print("Air Rhones-Alpes : "+self.data_str.format(self.city, self.indicator))
+        print("["+datetime.now().isoformat()+"] Air Rhones-Alpes : "+self.data_str.format(self.city, self.indicator))
         
     def run(self):
         while True:

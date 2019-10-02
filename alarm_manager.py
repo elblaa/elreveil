@@ -114,7 +114,7 @@ class AlarmManager:
             if next_alarm_candidate is not None and (self.next_alarm == datetime.min or next_alarm_candidate < self.next_alarm):
                 self.next_alarm = next_alarm_candidate
                 self.next_alarm_type = source.alarm_type
-        print("Next alarm is {0}".format(self.next_alarm.isoformat()))
+        print("["+datetime.now().isoformat()+"] Next alarm is {0}".format(self.next_alarm.isoformat()))
         self.triggers[0].select_new_song(self.next_alarm_type)
         self.runtime_updated = True
 
