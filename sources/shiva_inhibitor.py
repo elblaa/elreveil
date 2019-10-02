@@ -5,6 +5,7 @@ import requests
 import math
 from bs4 import BeautifulSoup
 import base64
+import json
 
 
 class ShivaInhibitor(Thread):
@@ -92,26 +93,46 @@ class ShivaInhibitor(Thread):
             return
 
         vacations = None
-        try:
+        try:           
             vacations = session.get(self.url + "/conges/user/list")
         except requests.exceptions.Timeout:
             self._set_error_code("ERROR_TIMEOUT_VACATION")  
             return       
-        
+
         soup = BeautifulSoup(vacations.text, 'html.parser')
         csrf_inputs = soup.findAll("input", {"name": "_csrf_token"})
         if csrf_inputs and len(csrf_inputs) > 0:
             self._set_error_code("ERROR_LOGIN_VACATION")
-            return
+            return        
 
         try:
-            self.parse_data_lines(soup, "type_conge_1", self.last_fetch)  # CP
-            # CET
-            self.parse_data_lines(soup, "type_conge_13",  self.last_fetch)
-            self.parse_data_lines(soup, "type_conge_7",
-                                self.last_fetch)  # RTTE
-            self.parse_data_lines(soup, "type_conge_6",
-                                self.last_fetch)  # RTTS
+            script_content = soup.findAll("script")[23].text
+            start_script_demand = "var loaded_demandes  = "
+            loaded_demands_start = script_content.index(start_script_demand) + len(start_script_demand)
+            loaded_demands_stop = script_content.index(";", loaded_demands_start  )
+            loaded_demands = json.loads(script_content[loaded_demands_start:loaded_demands_stop])
+
+            for demand in loaded_demands:
+                if demand["etat"] == 1 or demand["etat"] == 2:
+                    prefix_id = "type_conge_"+str(demand["type_conge_id"])
+                    for td_id in demand["td_ids"]:
+                        self.planning[td_id[len(prefix_id)+1:]] = True
+
+            #Add non working days
+            lines = soup.findAll("tr", {"class": "type_conge_1"})
+            now = datetime.now()
+            if lines is not None:
+                columns = lines[0].findAll("td")
+                current_day = 1
+                for column in columns:
+                    if "class" in column.attrs and "non_worked_day" in column.attrs["class"]:
+                        self.planning["{0}-{1:0=2d}-{2:0=2d}_morning".format(
+                            now.year, now.month, int(current_day))] = True
+                        self.planning["{0}-{1:0=2d}-{2:0=2d}_afternoon".format(
+                            now.year, now.month, int(current_day))] = True
+                        current_day += 1  
+                    elif "id" in column.attrs:
+                        current_day += 0.5
         except:
             self._set_error_code("ERROR_PARSING_VACATION")
             return
@@ -121,28 +142,6 @@ class ShivaInhibitor(Thread):
             self.error_code = None
             self._runtime_updated = True
         self.nb_error = 0
-
-    def parse_data_lines(self, soup, type_conge, now):
-        lines = soup.findAll("tr", {"class": type_conge})
-        if lines is None:
-            return
-        for line in lines:
-            columns = line.findAll("td")
-            current_day = 1
-            for column in columns:
-                if "class" in column.attrs and "non_worked_day" in column.attrs["class"]:
-                    self.planning["{0}-{1:0=2d}-{2:0=2d}_morning".format(
-                        now.year, now.month, current_day)] = True
-                    self.planning["{0}-{1:0=2d}-{2:0=2d}_afternoon".format(
-                        now.year, now.month, current_day)] = True
-                    current_day += 1                
-                elif "id" in column.attrs :
-                    period = column.attrs["id"][len(type_conge)+1:]
-                    # Does not distinguish waiting for validation
-                    if "class" in column.attrs and "coche" in column.attrs["class"]:                    
-                        self.planning[period] = True
-                    if period.endswith("afternoon"):
-                        current_day += 1                
 
     def is_next_date_valid(self, next_date):
         #Wait for shhiva to be fetch
