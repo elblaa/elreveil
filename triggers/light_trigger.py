@@ -94,12 +94,17 @@ class LightTrigger(Thread):
         self.gpio_red = gpiozero.PWMLED(self.pin_id_red)
         self.gpio_green = gpiozero.PWMLED(self.pin_id_green)
         self.gpio_blue = gpiozero.PWMLED(self.pin_id_blue)
-        self._put_color(0,0,0)        
+        self._put_color(0,0,0)    
+
+    def _get_proper_gpio_color_value(self, value):
+        if value > 0.001:
+            return max(0,min(1,value))
+        return 0    
 
     def _put_color(self, red, green, blue):
-        self.gpio_red.value = max(0,min(1,red))
-        self.gpio_green.value = max(0,min(1,green))
-        self.gpio_blue.value = max(0,min(1,blue))
+        self.gpio_red.value = self._get_proper_gpio_color_value(red)
+        self.gpio_green.value = self._get_proper_gpio_color_value(green)
+        self.gpio_blue.value = self._get_proper_gpio_color_value(blue)
 
     def start_alarm(self, alarm_type):
         self.alarm_in_progress = True
