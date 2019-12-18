@@ -49,6 +49,12 @@ class AlarmManager:
             if "lastAlert" in runtime:
                 self.last_alert = datetime.fromisoformat(runtime["lastAlert"])
 
+    def reload_configuration(self):
+        print("Reload configuration...")
+        files = self.get_configuration_files()
+        self.load_configuration(files[0]["alarmManager"], files[1]["alarmManager"])
+        self.update_next_alarm()
+
     def load_configuration(self, configuration, runtime):
         for i in range(len(self.sources)):
             self.sources[i].load_configuration(
@@ -169,10 +175,7 @@ class AlarmManager:
                 self.triggers[1].stop_alarm()
                 self.triggers[0].select_new_song(self.next_alarm_type)
             else:
-                print("Reload configuration...")
-                files = self.get_configuration_files()
-                self.load_configuration(files[0]["alarmManager"], files[1]["alarmManager"])
-                self.update_next_alarm()
+                print("void action")
         elif input_duration.total_seconds() >= 6:
             if self.demo_in_progress:
                 print("Stopping demo")

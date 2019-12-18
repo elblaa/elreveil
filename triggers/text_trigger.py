@@ -1,4 +1,5 @@
 import pyttsx3
+from datetime import datetime, time, date, timedelta
 from triggers.data import data_meteo, data_air, data_quote
 from triggers.tts import pyttsx3_module, gtts_module, custom_module
 from threading import Thread
@@ -134,5 +135,7 @@ class TextTrigger:
                 self.consume_text(data_source_text)
             elif data_source.status == "ERROR":
                 errors.append(" Erreur {0}".format(data_source.name)+".")
+            else:
+                print("["+datetime.now().isoformat()+"] No data received for module "+data_source.name)
         for error in errors:
             self.consume_text(error)       

@@ -43,6 +43,7 @@ class TextData():
             return None
         start_time = datetime.now()
         while self.status == "INIT" and (datetime.now() - start_time).total_seconds() < 3:
+            print("["+datetime.now().isoformat()+"] {0} : waiting data from module "+self.data_str.format(self.name))
             sleep(0.1)
         if (self.status == "OK"):
             return self.data_str.format(*self.variables_str)

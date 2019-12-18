@@ -10,6 +10,7 @@ import vlc
 
 # constants
 sleep_time = 0.1
+sleep_incr = 1
 use_gpio = True
 
 # Globals
@@ -22,6 +23,7 @@ configuration = None
 button_pin = 18
 button = None
 check_button_pressed = None
+last_configuration_date = None
 
 def button_status_gpio():
     return button.is_pressed
@@ -43,15 +45,14 @@ def listen_inputs():
         alarm_manager_obj.input_action(button_pressed_duration)
     elif button_pressed and button_is_pressed and (datetime.now() - button_pressed_start ).total_seconds() >= 2 and not button_pressed_step_configuration:
         button_pressed_step_configuration = True
-        media = vlc.MediaPlayer("configuration.wav")   
+        media = vlc.MediaPlayer("boat.wav")   
         media.audio_set_volume(100)
         media.play()
     elif button_pressed and button_is_pressed and (datetime.now() - button_pressed_start ).total_seconds() >= 6 and not button_pressed_step_demo:
         button_pressed_step_demo = True
-        media = vlc.MediaPlayer("demo.wav")   
+        media = vlc.MediaPlayer("boat.wav")   
         media.audio_set_volume(100)
         media.play()
-    
 
 def check_runtime():
     if (alarm_manager_obj.check_runtime()):
@@ -59,10 +60,26 @@ def check_runtime():
         with open('runtime.json', 'w') as outfile:      
             json.dump(data,outfile)
 
+def check_configuration_updated():
+    global last_configuration_date
+    if os.path.getmtime("configuration.json") > last_configuration_date.timestamp():
+        last_configuration_date = datetime.now()
+        media = vlc.MediaPlayer("stars.wav")   
+        media.audio_set_volume(100)
+        media.play()
+        alarm_manager_obj.reload_configuration()
+
 def think():
+    global sleep_incr
     listen_inputs()
 
+    if sleep_incr % 10 == 0:
+        check_configuration_updated()
+        sleep_incr = 0        
+
     alarm_manager_obj.think()
+
+    sleep_incr += 1
 
     check_runtime()
 
@@ -96,11 +113,12 @@ def write_default_configuration():
         json.dump(data,outfile)
 
 def init():
-    global configuration, alarm_manager_obj, button_pin, button, check_button_pressed, use_gpio
+    global configuration, alarm_manager_obj, button_pin, button, check_button_pressed, use_gpio, last_configuration_date
     if (not os.path.exists("configuration.json")):
         write_default_configuration()
     with open('configuration.json') as data:
         configuration = json.load(data)
+    last_configuration_date = datetime.now()
     if "useGPIO" in configuration:
         use_gpio = configuration["useGPIO"]
     alarm_manager_obj = alarm_manager.AlarmManager()

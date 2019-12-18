@@ -1,6 +1,7 @@
 from datetime import datetime, time, date, timedelta
 from threading import Thread
 from time import sleep
+import random
 import gpiozero
 import colorsys
 import numpy
@@ -24,6 +25,8 @@ class LightTrigger(Thread):
     gpio_green = None
     gpio_blue = None
     processing_light_data = False
+    show_light = False
+    displayed_light_hue = 0
 
     light_data = "light_data"
     time_range = 0.05
@@ -264,6 +267,22 @@ class LightTrigger(Thread):
             self.processing_light_data = False
             print("Light data for {0} written in {1} seconds".format(self.sound_trigger.next_song, (datetime.now() - start_date).total_seconds()))   
 
+    def toggle_light(self):
+        self.show_light =  not self.show_light
+        self.displayed_light_hue = random.randint(0,360)
+        if self.show_light:
+            number_of_transition_interval = int(self.time_fading_transition / 50)
+            nominal_percentage_per_interval = number_of_transition_interval / 100
+            for i in range(number_of_transition_interval): 
+                rgb_color = colorsys.hsv_to_rgb(self.displayed_light_hue,self.saturation,min(self.peak_value,i*nominal_percentage_per_interval))
+                self._put_color(rgb_color[0],rgb_color[1],rgb_color[2])
+                sleep(0.05)
+        print("Display light : {0} - {1}".format(self.show_light, self.displayed_light_hue))
+
+    def manage_light(self):
+        if self.show_light:
+            print("toto")
+
     def run(self):
         while self.enabled:
             if self.time_displayed is not None:
@@ -271,5 +290,6 @@ class LightTrigger(Thread):
             elif self.alarm_in_progress:
                 self._loop_alarm()
             else:
+                self.manage_light()
                 self._prepare_song_data()
             sleep(0.1)
