@@ -25,8 +25,11 @@ class LightTrigger(Thread):
     gpio_green = None
     gpio_blue = None
     processing_light_data = False
-    show_light = False
+
+    display_light = False
     displayed_light_hue = 0
+    displayed_light_hue_change_interval = 10 #time in second after next hue is displayed
+    displayed_light_hue_current_interval = 1
 
     light_data = "light_data"
     time_range = 0.05
@@ -115,6 +118,17 @@ class LightTrigger(Thread):
     def stop_alarm(self):
         self.alarm_in_progress = False
 
+    def _transition_to_color(self, hue_start, saturation_start, peak_start, hue_end, saturation_end, peak_end):
+        number_of_transition_interval = int(self.time_fading_transition / 50)
+        hue_value_interval = (hue_end - hue_start) / number_of_transition_interval
+        saturation_interval = (saturation_end - saturation_start) / number_of_transition_interval
+        peak_interval = (peak_end - peak_start) / number_of_transition_interval
+        for i in range(number_of_transition_interval): 
+            rgb_color = colorsys.hsv_to_rgb(hue_start + i * hue_value_interval,saturation_start + i * saturation_interval, peak_start + i * peak_interval)
+            self._put_color(rgb_color[0],rgb_color[1],rgb_color[2])
+            sleep(0.05)
+        self._put_color(hue_end, saturation_end, peak_end)
+
     def display_time(self, current_time, next_alarm):
         self.time_displayed = current_time
         self.next_alarm = next_alarm
@@ -123,23 +137,30 @@ class LightTrigger(Thread):
         if self.next_alarm is None:
             self.next_alarm = datetime.today()
         hue = ((abs(self.next_alarm - self.time_displayed) / timedelta(hours=1)) % 24 * 15) / 360
-        number_of_transition_interval = int(self.time_fading_transition / 50)
-        nominal_percentage_per_interval = number_of_transition_interval / 100
-        for i in range(number_of_transition_interval): 
-            rgb_color = colorsys.hsv_to_rgb(hue,self.saturation,min(self.peak_value,i*nominal_percentage_per_interval))
-            self._put_color(rgb_color[0],rgb_color[1],rgb_color[2])
-            sleep(0.05)
+
+        hue_start = hue
+        saturation_start = self.saturation
+        peak_start = 0
+        if self.display_light:
+            hue_start =  self.displayed_light_hue
+            peak_start = self.peak_value
+        self._transition_to_color(hue_start, saturation_start, peak_start, hue, self.saturation, self.peak_value)
 
         rgb_color = colorsys.hsv_to_rgb(hue,self.saturation,self.peak_value)
         self._put_color(rgb_color[0],rgb_color[1],rgb_color[2])
         sleep(self.time_transition / 1000)
 
-        for i in range(number_of_transition_interval): 
-            rgb_color = colorsys.hsv_to_rgb(hue,self.saturation,max(0,self.peak_value - i*nominal_percentage_per_interval))
-            self._put_color(rgb_color[0],rgb_color[1],rgb_color[2])
-            sleep(0.05)
-       
-        self._put_color(0,0,0)
+        hue_end = hue
+        saturation_end = self.saturation
+        peak_end = 0
+        if self.display_light: 
+            hue_end = self.displayed_light_hue
+            peak_end = self.peak_value
+
+        self._transition_to_color(hue, self.saturation, self.peak_value, hue_end, saturation_end, peak_end)       
+        
+        if not self.display_light:
+            self._put_color(0,0,0)
         self.time_displayed = None
 
     def post_alarm(self):
@@ -184,8 +205,10 @@ class LightTrigger(Thread):
             rgb_color = colorsys.hsv_to_rgb(color,saturation,max(0,peak - i*nominal_percentage_per_interval))
             self._put_color(rgb_color[0],rgb_color[1],rgb_color[2])
             sleep(0.05)
-       
-        self._put_color(0,0,0)
+        if not self.display_light:
+            self._put_color(0,0,0)
+        else:
+            self._put_color(self.displayed_light_hue, self.saturation, self.peak_value)
     
     def _prepare_song_data(self):
         if self.sound_trigger.next_song is None:
@@ -268,20 +291,31 @@ class LightTrigger(Thread):
             print("Light data for {0} written in {1} seconds".format(self.sound_trigger.next_song, (datetime.now() - start_date).total_seconds()))   
 
     def toggle_light(self):
-        self.show_light =  not self.show_light
+        self.display_light =  not self.display_light
         self.displayed_light_hue = random.randint(0,360)
-        if self.show_light:
+        print("Toggle light : {0} - {1}".format(self.display_light, self.displayed_light_hue))
+        if self.display_light:
             number_of_transition_interval = int(self.time_fading_transition / 50)
             nominal_percentage_per_interval = number_of_transition_interval / 100
             for i in range(number_of_transition_interval): 
                 rgb_color = colorsys.hsv_to_rgb(self.displayed_light_hue,self.saturation,min(self.peak_value,i*nominal_percentage_per_interval))
                 self._put_color(rgb_color[0],rgb_color[1],rgb_color[2])
                 sleep(0.05)
-        print("Display light : {0} - {1}".format(self.show_light, self.displayed_light_hue))
+        else:
+            number_of_transition_interval = int(self.time_fading_transition / 50)
+            nominal_percentage_per_interval = number_of_transition_interval / 100
+            for i in range(number_of_transition_interval): 
+                rgb_color = colorsys.hsv_to_rgb(self.displayed_light_hue,self.saturation,max(0,self.peak_value - i*nominal_percentage_per_interval))
+                self._put_color(rgb_color[0],rgb_color[1],rgb_color[2])
+                sleep(0.05)        
 
     def manage_light(self):
-        if self.show_light:
-            print("toto")
+        if self.display_light:
+            if self.displayed_light_hue_current_interval % (self.displayed_light_hue_change_interval * 10) == 0:
+                self.displayed_light_hue = (self.displayed_light_hue + 1) % 360
+                self.displayed_light_hue_current_interval = 0
+                self._put_color(self.displayed_light_hue, self.saturation, self.peak_value)
+            self.displayed_light_hue_current_interval += 1
 
     def run(self):
         while self.enabled:

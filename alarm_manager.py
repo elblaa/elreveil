@@ -175,7 +175,7 @@ class AlarmManager:
                 self.triggers[1].stop_alarm()
                 self.triggers[0].select_new_song(self.next_alarm_type)
             else:
-                print("void action")
+                self.triggers[1].toggle_light()
         elif input_duration.total_seconds() >= 6:
             if self.demo_in_progress:
                 print("Stopping demo")
