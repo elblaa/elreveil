@@ -106,11 +106,11 @@ class AlarmManager:
             configuration["triggers"][0], runtime["triggers"][0]))
         light_trg = light_trigger.LightTrigger(configuration["triggers"][1], runtime["triggers"][1], self.triggers[0])
         self.triggers.append(light_trg)
-        self.triggers.append(text_trigger.TextTrigger(
-            configuration["triggers"][2], runtime["triggers"][2]))
-                
+        text_trg = text_trigger.TextTrigger(configuration["triggers"][2], runtime["triggers"][2])
+        self.triggers.append(text_trg)                
         self.load_runtime(runtime)
         light_trg.start()
+        text_trg.start()
 
     def update_next_alarm(self):
         self.next_alarm = datetime.min

@@ -28,8 +28,9 @@ class PyTTSX3Module(TTSModule):
             else:
                 self.engine.setProperty("voice",self.voice.id)
 
-    def _generate_data(self, text):
-        self.consume_text(text)
+    def _generate_data(self, text, add_to_sounds_text):
+        if add_to_sounds_text:
+            self.consume_text(text)
 
     def consume_text(self, text):
         if self.enabled:

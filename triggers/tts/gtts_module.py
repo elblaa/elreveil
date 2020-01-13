@@ -25,7 +25,7 @@ class GTTSModule(TTSModule):
     def __init__(self, configuration, runtime, tts_path):
         TTSModule.__init__(self,configuration,runtime, tts_path)
 
-    def _generate_data(self, text):       
+    def _generate_data(self, text, add_to_sounds_text):       
         try:
             file_name = str(uuid.uuid4())+".mp3"
             tts = gtts.gTTS(text, lang=self.lang)
@@ -34,7 +34,8 @@ class GTTSModule(TTSModule):
             self.data.append(entry)
             with open(os.path.join(self.tts_path, "data.json"), 'w') as outfile:      
                 json.dump(self.data,outfile)
-            self._prepare_data(entry)
+            if add_to_sounds_text:    
+                self._prepare_data(entry)
             return True
         except gtts.tts.gTTSError:
             self._set_error_code("ERROR_GTTS")

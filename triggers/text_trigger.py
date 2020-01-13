@@ -6,8 +6,9 @@ from threading import Thread
 import vlc
 import os
 import time
+from time import sleep
 
-class TextTrigger:
+class TextTrigger(Thread):
     current_time_str = "{0} heures et {1} minutes."
     data_sources = []
     tts_modules = []
@@ -46,6 +47,7 @@ class TextTrigger:
                 configuration["data"][i], runtime["data"][i])
 
     def __init__(self, configuration, runtime):
+        Thread.__init__(self)
         self.load_configuration(configuration, runtime)
         self.data_sources.append(data_meteo.MeteoFranceData(
             configuration["data"][0], runtime["data"][0]))
@@ -128,6 +130,7 @@ class TextTrigger:
                 break
 
     def prepare_data(self):
+        start_date = datetime.now()
         errors = []
         for data_source in self.data_sources:
             print("["+datetime.now().isoformat()+"] Get data for module "+data_source.name)
@@ -140,4 +143,19 @@ class TextTrigger:
             else:
                 print("["+datetime.now().isoformat()+"] No data received for module "+data_source.name)
         for error in errors:
-            self.consume_text(error)       
+            self.consume_text(error)    
+        print("Elapsed time for prepare data : {0} seconds".format((datetime.now() - start_date).total_seconds()))   
+
+    def run(self):     
+        while True:   
+            for data_source in self.data_sources:
+                if data_source.status == "OK":
+                    data_source_text = data_source.get_data()
+                    if data_source_text is not None:
+                        remaining = data_source_text
+                        for tts_module in self.tts_modules:
+                            next_remaining = tts_module.prepare_generation(remaining)
+                            remaining = next_remaining
+                            if remaining is None or remaining == "":
+                                break
+            sleep(1)

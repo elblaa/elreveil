@@ -50,11 +50,27 @@ class TTSModule():
         self._runtime_updated = True
         print("{0} : Error => {1}".format(self.name, error_code))
 
-    def _generate_data(self, text):
+    def _generate_data(self, text, add_to_sounds_text):
         return False
 
     def _prepare_data(self,data):
         self.sounds_text.append(data)
+
+    def prepare_generation(self, text):
+        if self.enabled and self.can_generate:
+            if text is None or text == "":
+                return None
+            matching_data = {}
+            text_stripped = text.strip()
+            for entry in self.data:
+                if text_stripped.startswith(entry["entry"]) and (matching_data == {} or len(entry["entry"]) > len(matching_data["entry"])):
+                    matching_data = entry
+                    if (matching_data["entry"] == text_stripped):
+                        break
+            if matching_data == {}:
+                if self._generate_data(text, False):                
+                    return None
+        return text
     
     def consume_text(self, text):
         if not self.enabled:
@@ -69,7 +85,7 @@ class TTSModule():
                 if (matching_data["entry"] == text_stripped):
                     break
         if matching_data == {}:
-            if self.can_generate and self._generate_data(text):                
+            if self.can_generate and self._generate_data(text, True):                
                 return None
             else:
                 return text
