@@ -1,0 +1,16 @@
+{
+    "title": "Air Rhone Alpes data",
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "type": "boolean",
+            "default": true
+        },
+        "communeId": {
+            "type": "string"
+        },
+        "stringData": {
+            "type": "string"
+        }
+    }
+}

@@ -1,0 +1,82 @@
+{
+    "title": "Recurrent Alarm",
+    "type": "object",
+    "properties": {
+        "days": {
+            "type": "array",
+            "items": {
+                "type": "integer",
+                "uniqueItems": true,
+                "enumSource": [
+                    {
+                        "source": [
+                            {
+                                "value": 0,
+                                "title": "Monday"
+                            },
+                            {
+                                "value": 1,
+                                "title": "Tuesday"
+                            },
+                            {
+                                "value": 2,
+                                "title": "Wednesday"
+                            },
+                            {
+                                "value": 3,
+                                "title": "Thursday"
+                            },
+                            {
+                                "value": 4,
+                                "title": "Friday"
+                            },
+                            {
+                                "value": 5,
+                                "title": "Saturday"
+                            },
+                            {
+                                "value": 6,
+                                "title": "Sunday"
+                            }
+                        ],
+                        "title": "{{item.title}}",
+                        "value": "{{item.value}}"
+                    }
+                ]
+            }
+        },
+        "hour": {
+            "type": "string",
+            "format": "text",
+            "title": "Hour"
+        },
+        "inhibitors": {
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    {
+                        "type": "object",
+                        "required": [
+                            "username",
+                            "password",
+                            "url"
+                        ],
+                        "properties": {
+                            "userName": {
+                                "type": "string"
+                            },
+                            "password": {
+                                "type": "string",
+                                "format": "password"
+                            },
+                            "url": {
+                                "type": "string",
+                                "format": "url"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

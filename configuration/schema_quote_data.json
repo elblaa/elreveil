@@ -1,0 +1,25 @@
+{
+    "title": "Wikiquote data",
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "type": "boolean",
+            "default": true
+        },
+        "categories": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "wikiQuoteUrl": {
+            "type": "string"
+        },
+        "stringData": {
+            "type": "string"
+        },
+        "quoteMaxLength": {
+            "type": "integer"
+        }
+    }
+}

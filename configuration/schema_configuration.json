@@ -1,0 +1,57 @@
+{
+    "type": "object",
+    "title": "configuration",
+    "required": [
+        "alarmManager"
+    ],
+    "properties": {
+        "useGPIO": {
+            "type": "boolean"
+        },
+        "alarmManager": {
+            "type": "object",
+            "required": [
+                "sources",
+                "triggers"
+            ],
+            "properties": {
+                "sources": {
+                    "type": "array",
+                    "title": "Sources",
+                    "items": {
+                        "allOf": [
+                            {
+                                "$ref": "schema_recurrent_alarm.json",
+                                "title": "Recurrent Alarm"
+                            },
+                            {
+                                "$ref": "schema_temporary_alarm.json",
+                                "title": "Temporary Alarm"
+                            }
+                        ]
+                    }
+                },
+                "triggers": {
+                    "type": "array",
+                    "title": "Triggers",
+                    "items": {
+                        "allOf": [
+                            {
+                                "$ref": "schema_sound_trigger.json",
+                                "title": "Sound Trigger"
+                            },
+                            {
+                                "$ref": "schema_light_trigger.json",
+                                "title": "Light Trigger"
+                            },
+                            {
+                                "$ref": "schema_text_trigger.json",
+                                "title": "Text Trigger"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}

@@ -26,7 +26,7 @@ class TTSModule():
     
     def load_configuration(self, configuration, runtime):
         if "canGenerate" in configuration:
-             self.can_generate = configuration["canGenerate"]
+            self.can_generate = configuration["canGenerate"]
         if "enabled" in configuration:
             self.enabled = configuration["enabled"]
 

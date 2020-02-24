@@ -1,0 +1,16 @@
+{
+    "title": "Meteo France Data",
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "type": "boolean",
+            "default": true
+        },
+        "meteoPath": {
+            "type": "string"
+        },
+        "stringData": {
+            "type": "string"
+        }
+    }
+}

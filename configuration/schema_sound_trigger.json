@@ -1,0 +1,50 @@
+{
+    "title": "Sound trigger",
+    "type": "object",
+    "required": [
+        "songsPath"
+    ],
+    "properties": {
+        "songsPath": {
+            "type": "string"
+        },
+        "songsSelectionType": {
+            "type": "string",
+            "enum": ["SingleSong","CategorySongs", "RandomCategory"]
+        },
+        "singleSongPath": {
+            "type": "string"
+        },
+        "songsCategory": {
+            "type": "string"
+        },        
+        "selectionTypeByAlarmType": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "alarmType",
+                    "selectionType"
+                ],
+                "properties": {
+                    "alarmType": {
+                        "type": "string"
+                    },
+                    "selectionType": {
+                        "type": "string",
+                        "enum": ["SingleSong","CategorySongs", "RandomCategory"]
+                    },
+                    "singleSongPath": {
+                        "type": "string"
+                    },
+                    "songsCategory": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "demoPath": {
+            "type": "string"
+        }
+    }
+}

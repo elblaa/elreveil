@@ -1,0 +1,13 @@
+{
+    "title": "Temporary Alarm",
+    "type": "object",
+    "properties": {
+        "dates": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "format": "datetime"
+            }
+        }
+    }
+}

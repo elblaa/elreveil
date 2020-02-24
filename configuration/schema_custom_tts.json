@@ -1,0 +1,14 @@
+{
+    "title": "Custom TTS Module",
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "type": "boolean",
+            "default": true
+        },
+        "canGenerate": {
+            "type": "boolean",
+            "default": false
+        }
+    }
+}

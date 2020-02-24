@@ -1,0 +1,66 @@
+{
+    "title": "Light Trigger",
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "type": "boolean",
+            "default": false
+        },
+        "lightData": {
+            "type": "string"
+        },
+        "timeTransition": {
+            "type": "integer",
+            "default": 3000
+        },
+        "timeFadingTransition": {
+            "type": "integer",
+            "default": 1000
+        },
+        "pinRed": {
+            "type": "integer",
+            "default": 27
+        },
+        "pinGreen": {
+            "type": "integer",
+            "default": 23
+        },
+        "pinBlue": {
+            "type": "integer",
+            "default": 25
+        },
+        "timeRange": {
+            "type": "number"
+        },
+        "pitchColorMax": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 360
+        },
+        "frequencyStart": {
+            "type": "integer"
+        },
+        "frequencyEnd": {
+            "type": "integer"
+        },
+        "peakFactor": {
+            "type": "integer"
+        },
+        "fftThresold": {
+            "type": "number"
+        },
+        "saturation": {
+            "type": "number",
+            "maximum": 1,
+            "minimum": 0
+        },
+        "peakValue": {
+            "type": "number",
+            "maximum": 1,
+            "minimum": 0
+        },
+        "displayedLightHueChangeInterval": {
+            "type": "integer"
+        }
+    }
+}

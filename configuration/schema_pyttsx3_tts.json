@@ -1,0 +1,17 @@
+{
+    "title": "Python TTSX3 Module",
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "type": "boolean",
+            "default": true
+        },
+        "canGenerate": {
+            "type": "boolean",
+            "default": true
+        },
+        "voice": {
+            "type": "string"
+        }
+    }
+}

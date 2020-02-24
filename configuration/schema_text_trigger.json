@@ -1,0 +1,51 @@
+{
+    "title": "Text Trigger",
+    "type": "object",
+    "required": [ "data", "ttsPath", "ttsModules" ],
+    "properties": {
+        "stringCurrentTime": {
+            "type": "string"
+        },
+        "ttsPath": {
+            "type": "string"
+        },
+        "data": {
+            "type": "array",
+            "items": {
+                "allOf": [
+                    {
+                        "$ref": "schema_meteo_data.json",
+                        "title": "Meteo France Data"
+                    },
+                    {
+                        "$ref": "schema_air_data.json",
+                        "title": "Air Rhone Alpes data"
+                    },
+                    {
+                        "$ref": "schema_quote_data.json",
+                        "title": "Wikiquote data"
+                    }
+                ]
+            }
+        },
+        "ttsModules": {
+            "type": "array",
+            "items": {
+                "allOf": [
+                    {
+                        "$ref": "schema_custom_tts.json",
+                        "title": "Custom TTS Module"
+                    },
+                    {
+                        "$ref": "schema_gtts_tts.json",
+                        "title": "Google TTS Module"
+                    },
+                    {
+                        "$ref": "schema_pyttsx3_tts.json",
+                        "title": "Python TTSX3 Module"
+                    }
+                ]
+            }
+        }
+    }
+}
