@@ -38,8 +38,8 @@ class LightTrigger(Thread):
     freq_end = 3520 # end of frequencies used with fft (end of equal temperament)
     peak_factor = 5
     fft_thresold = 1
-    saturation = 0.9
-    peak_value = 0.9
+    saturation = 0.95
+    peak_value = 0.95
     song_data = []
     song_loaded = None
     frame_rate = 44100
@@ -86,6 +86,8 @@ class LightTrigger(Thread):
             self.saturation = configuration["saturation"]
         if "peakValue" in configuration:
             self.peak_value = configuration["peakValue"]
+        if "displayedLightHueChangeInterval" in configuration:
+            self.displayed_light_hue_change_interval = configuration["displayedLightHueChangeInterval"]
         
         self.load_runtime(runtime)
 
@@ -100,17 +102,21 @@ class LightTrigger(Thread):
         self.gpio_red = gpiozero.PWMLED(self.pin_id_red)
         self.gpio_green = gpiozero.PWMLED(self.pin_id_green)
         self.gpio_blue = gpiozero.PWMLED(self.pin_id_blue)
-        self._put_color(0,0,0)    
+        self._put_color(0,0,0)     
 
-    def _get_proper_gpio_color_value(self, value):
+    def _put_color_hsv(self, hue, saturation, peak):
+        rgb_color = colorsys.hsv_to_rgb(hue/360, saturation, peak)
+        self._put_color(rgb_color[0],rgb_color[1],rgb_color[2])
+
+    def get_proper_gpio_color_value(self, value):
         if value > 0.001:
             return max(0,min(1,value))
-        return 0    
+        return 0
 
     def _put_color(self, red, green, blue):
-        self.gpio_red.value = self._get_proper_gpio_color_value(red)
-        self.gpio_green.value = self._get_proper_gpio_color_value(green)
-        self.gpio_blue.value = self._get_proper_gpio_color_value(blue)
+        self.gpio_red.value = self.get_proper_gpio_color_value(red)
+        self.gpio_green.value = self.get_proper_gpio_color_value(green)
+        self.gpio_blue.value = self.get_proper_gpio_color_value(blue)
 
     def start_alarm(self, alarm_type):
         self.alarm_in_progress = True
@@ -120,14 +126,14 @@ class LightTrigger(Thread):
 
     def _transition_to_color(self, hue_start, saturation_start, peak_start, hue_end, saturation_end, peak_end):
         number_of_transition_interval = int(self.time_fading_transition / 50)
-        hue_value_interval = (hue_end - hue_start) / number_of_transition_interval
+        hue_value_interval = abs(hue_end - hue_start) / number_of_transition_interval
         saturation_interval = (saturation_end - saturation_start) / number_of_transition_interval
         peak_interval = (peak_end - peak_start) / number_of_transition_interval
         for i in range(number_of_transition_interval): 
-            rgb_color = colorsys.hsv_to_rgb(hue_start + i * hue_value_interval,saturation_start + i * saturation_interval, peak_start + i * peak_interval)
+            rgb_color = colorsys.hsv_to_rgb((hue_start + i * hue_value_interval) % 360/ 360, saturation_start + i * saturation_interval, peak_start + i * peak_interval)
             self._put_color(rgb_color[0],rgb_color[1],rgb_color[2])
             sleep(0.05)
-        self._put_color(hue_end, saturation_end, peak_end)
+        self._put_color_hsv(hue_end, saturation_end, peak_end)
 
     def display_time(self, current_time, next_alarm):
         self.time_displayed = current_time
@@ -136,7 +142,8 @@ class LightTrigger(Thread):
     def _display_time(self):
         if self.next_alarm is None:
             self.next_alarm = datetime.today()
-        hue = ((abs(self.next_alarm - self.time_displayed) / timedelta(hours=1)) % 24 * 15) / 360
+        # Blue when alarm is > 8 hr then start to shift to red 
+        hue = min(240, (abs(self.next_alarm - self.time_displayed) / timedelta(hours=1)) * 30)
 
         hue_start = hue
         saturation_start = self.saturation
@@ -146,8 +153,7 @@ class LightTrigger(Thread):
             peak_start = self.peak_value
         self._transition_to_color(hue_start, saturation_start, peak_start, hue, self.saturation, self.peak_value)
 
-        rgb_color = colorsys.hsv_to_rgb(hue,self.saturation,self.peak_value)
-        self._put_color(rgb_color[0],rgb_color[1],rgb_color[2])
+        self._put_color_hsv(hue,self.saturation,self.peak_value)
         sleep(self.time_transition / 1000)
 
         hue_end = hue
@@ -198,17 +204,12 @@ class LightTrigger(Thread):
             self._put_color(rgb_color[0],rgb_color[1],rgb_color[2])
             sleep(self.time_range)   
 
-        #end transition
-        number_of_transition_interval = int(self.time_fading_transition / 50)
-        nominal_percentage_per_interval = number_of_transition_interval / 100
-        for i in range(number_of_transition_interval): 
-            rgb_color = colorsys.hsv_to_rgb(color,saturation,max(0,peak - i*nominal_percentage_per_interval))
-            self._put_color(rgb_color[0],rgb_color[1],rgb_color[2])
-            sleep(0.05)
+        #end transition            
         if not self.display_light:
+            self._transition_to_color(color, saturation, peak, color, saturation, 0)   
             self._put_color(0,0,0)
         else:
-            self._put_color(self.displayed_light_hue, self.saturation, self.peak_value)
+            self._transition_to_color(color, saturation, peak, self.displayed_light_hue, self.saturation, self.peak_value)
     
     def _prepare_song_data(self):
         if self.sound_trigger.next_song is None:
@@ -281,7 +282,6 @@ class LightTrigger(Thread):
                 #saturation = max(0,min(1, 0.7 + saturation))
                 self.song_data.append([peak, saturation, hue])
 
-            
             with open(file_data_path,"wb") as fd:
                 pickle.dump(self.song_data,fd)
             with open(file_info_data_path, 'w') as outfile:      
@@ -291,30 +291,21 @@ class LightTrigger(Thread):
             print("Light data for {0} written in {1} seconds".format(self.sound_trigger.next_song, (datetime.now() - start_date).total_seconds()))   
 
     def toggle_light(self):
-        self.display_light =  not self.display_light
-        self.displayed_light_hue = random.randint(0,360)
-        print("Toggle light : {0} - {1}".format(self.display_light, self.displayed_light_hue))
-        if self.display_light:
-            number_of_transition_interval = int(self.time_fading_transition / 50)
-            nominal_percentage_per_interval = number_of_transition_interval / 100
-            for i in range(number_of_transition_interval): 
-                rgb_color = colorsys.hsv_to_rgb(self.displayed_light_hue,self.saturation,min(self.peak_value,i*nominal_percentage_per_interval))
-                self._put_color(rgb_color[0],rgb_color[1],rgb_color[2])
-                sleep(0.05)
-        else:
-            number_of_transition_interval = int(self.time_fading_transition / 50)
-            nominal_percentage_per_interval = number_of_transition_interval / 100
-            for i in range(number_of_transition_interval): 
-                rgb_color = colorsys.hsv_to_rgb(self.displayed_light_hue,self.saturation,max(0,self.peak_value - i*nominal_percentage_per_interval))
-                self._put_color(rgb_color[0],rgb_color[1],rgb_color[2])
-                sleep(0.05)        
+        if self.enabled:
+            self.display_light =  not self.display_light        
+            if self.display_light:
+                self.displayed_light_hue = random.randint(0,360)
+                self._transition_to_color(self.displayed_light_hue,self.saturation,0,self.displayed_light_hue, self.saturation, self.peak_value)
+            else:
+                self._transition_to_color(self.displayed_light_hue,self.saturation,self.peak_value,self.displayed_light_hue, self.saturation, 0)    
+            print("Toggle light : {0} - {1}".format(self.display_light, self.displayed_light_hue))
 
     def manage_light(self):
         if self.display_light:
             if self.displayed_light_hue_current_interval % (self.displayed_light_hue_change_interval * 10) == 0:
                 self.displayed_light_hue = (self.displayed_light_hue + 1) % 360
                 self.displayed_light_hue_current_interval = 0
-                self._put_color(self.displayed_light_hue, self.saturation, self.peak_value)
+                self._put_color_hsv(self.displayed_light_hue, self.saturation, self.peak_value)
             self.displayed_light_hue_current_interval += 1
 
     def run(self):

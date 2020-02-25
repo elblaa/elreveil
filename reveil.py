@@ -45,7 +45,7 @@ def listen_inputs():
         alarm_manager_obj.input_action(button_pressed_duration)
     elif button_pressed and button_is_pressed and (datetime.now() - button_pressed_start ).total_seconds() >= 2 and not button_pressed_step_configuration:
         button_pressed_step_configuration = True
-        media = vlc.MediaPlayer("boat.wav")   
+        media = vlc.MediaPlayer("snowflake.wav")   
         media.audio_set_volume(100)
         media.play()
     elif button_pressed and button_is_pressed and (datetime.now() - button_pressed_start ).total_seconds() >= 6 and not button_pressed_step_demo:

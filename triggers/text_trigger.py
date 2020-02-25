@@ -130,9 +130,11 @@ class TextTrigger:
     def prepare_data(self):
         errors = []
         for data_source in self.data_sources:
+            print("["+datetime.now().isoformat()+"] Get data for module "+data_source.name)
             data_source_text = data_source.get_data()
             if data_source_text is not None:
                 self.consume_text(data_source_text)
+                print("["+datetime.now().isoformat()+"] data for module "+data_source.name+" has been received")
             elif data_source.status == "ERROR":
                 errors.append(" Erreur {0}".format(data_source.name)+".")
             else:
