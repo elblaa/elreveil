@@ -46,9 +46,7 @@ class SoundTrigger:
         if "songsSelectionType" in configuration:
             self.songs_selection_type = configuration["songsSelectionType"]
         if "singleSongPath" in configuration:
-            self.single_song_path = configuration["singleSongPath"]
-        if "songsCategory" in configuration:
-            self.songs_category = configuration["songsCategory"]
+            self.single_song_path = configuration["singleSongPath"]      
         self.selection_type_by_alarm_type.clear()
         if "selectionTypeByAlarmType" in configuration:
             for alarm_type in configuration["selectionTypeByAlarmType"]:
@@ -62,6 +60,9 @@ class SoundTrigger:
         if "demoPath" in configuration:
             self.demo_path = configuration["demoPath"]
         self.load_runtime(runtime)
+        # Load after runtime to force value if specified
+        if "songsCategory" in configuration:
+            self.songs_category = configuration["songsCategory"]
 
     def __init__(self, configuration, runtime):
         self.load_configuration(configuration, runtime)
