@@ -5,6 +5,7 @@ import json
 import vlc
 import time
 
+
 class TTSModule():
     name = "default"
     can_generate = False
@@ -19,11 +20,11 @@ class TTSModule():
 
     def dump_runtime(self):
         self._runtime_updated = False
-        return { "errorCode": self.error_code }
+        return {"errorCode": self.error_code}
 
     def check_runtime(self):
         return self._runtime_updated
-    
+
     def load_configuration(self, configuration, runtime):
         if "canGenerate" in configuration:
             self.can_generate = configuration["canGenerate"]
@@ -34,7 +35,7 @@ class TTSModule():
         self.load_configuration(configuration, runtime)
         self.tts_path = os.path.join(tts_path, self.name)
         self._load_data()
-    
+
     def _load_data(self):
         if not self.enabled:
             return
@@ -53,7 +54,7 @@ class TTSModule():
     def _generate_data(self, text, add_to_sounds_text):
         return False
 
-    def _prepare_data(self,data):
+    def _prepare_data(self, data):
         self.sounds_text.append(data)
 
     def prepare_generation(self, text):
@@ -68,10 +69,10 @@ class TTSModule():
                     if (matching_data["entry"] == text_stripped):
                         break
             if matching_data == {}:
-                if self._generate_data(text, False):                
+                if self._generate_data(text, False):
                     return None
         return text
-    
+
     def consume_text(self, text):
         if not self.enabled:
             return text
@@ -85,7 +86,7 @@ class TTSModule():
                 if (matching_data["entry"] == text_stripped):
                     break
         if matching_data == {}:
-            if self.can_generate and self._generate_data(text, True):                
+            if self.can_generate and self._generate_data(text, True):
                 return None
             else:
                 return text
@@ -93,8 +94,8 @@ class TTSModule():
             self._prepare_data(matching_data)
             if matching_data["entry"] == text_stripped:
                 return None
-            else:            
-                text_remaining  = text_stripped[len(matching_data["entry"]):]
+            else:
+                text_remaining = text_stripped[len(matching_data["entry"]):]
                 return self.consume_text(text_remaining)
 
     def say_text(self):

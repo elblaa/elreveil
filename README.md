@@ -17,7 +17,18 @@ This script can run on windows by disabling GPIO (see configuration)
 
 ## Installation
 
-TODO
+Using a raspbian os:
+
+Requirements:
+ - vlc
+ - espeak
+
+Force sound through jack audio:
+`sudo raspi-config` -> Advanced configuration
+
+Modules used:
+
+`pip3 install keyboard python-vlc pydub pyttsx3 gtts`
 
 [How to connect a RGB led stripe to the raspberry](https://dordnung.de/raspberrypi-ledstrip/)
 
@@ -27,7 +38,6 @@ TODO
 
 ## Known bugs
 
- - During post alarm  speech, some sentences are delayed to the next push event
 
 ## Next features
 

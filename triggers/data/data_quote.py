@@ -44,6 +44,10 @@ class WikiQuoteData(Thread, TextData):
         previous_fetch = self.last_fetch 
         self.last_fetch = datetime.now()
 
+        self.status = "INIT"
+        self.quote = None
+        self.variables_str = [None,None,None]
+
         self.category = self.categories[random.randrange(len(self.categories))]
         self.variables_str[1] = self.category
         category = "Catégorie:"+self.category

@@ -38,6 +38,14 @@ class MeteoFranceData(Thread, TextData):
             return
         self.last_fetch = datetime.now()
 
+        self.min_temp = None
+        self.max_temp = None
+        self.weather = None
+        self.variables_str[0] = ""
+        self.variables_str[1] = ""
+        self.variables_str[2] = ""
+        self.status = "INIT"
+
         result = None
         try:
             result = requests.get("http://www.meteofrance.com/previsions-meteo-france"+self.meteo_path, timeout=5)        

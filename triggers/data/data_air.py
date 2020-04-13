@@ -34,6 +34,10 @@ class AirRhoneAlpesData(Thread, TextData):
 
     def fetch_data(self):  
         self.last_fetch = datetime.now()
+        
+        self.indicator = None
+        self.variables_str[1] = ""
+        self.status = "INIT"
 
         result = None
         try:
