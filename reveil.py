@@ -97,11 +97,14 @@ def write_default_configuration():
             "triggers": [
                 { "songsPath": "/home/elreveil/songs"},
                 {
-                    
+                    "enabled": False
                 },
                 {
                     "data":[{},{},{}],
-                    "ttsModules": [{},{},{}]
+                    "ttsModules": [{
+                        "enabled": False
+                    },{},{}],
+                    "ttsPath": "tts_data"
                 }
                 ]
         },

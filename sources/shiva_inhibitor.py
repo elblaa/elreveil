@@ -106,7 +106,7 @@ class ShivaInhibitor(Thread):
             return        
 
         try:
-            script_content = soup.findAll("script")[23].text
+            script_content = soup.findAll("script")[23].string #Is it text or string ?
             start_script_demand = "var loaded_demandes  = "
             loaded_demands_start = script_content.index(start_script_demand) + len(start_script_demand)
             loaded_demands_stop = script_content.index(";", loaded_demands_start  )

@@ -142,8 +142,8 @@ class LightTrigger(Thread):
     def _display_time(self):
         if self.next_alarm is None:
             self.next_alarm = datetime.today()
-        # Blue when alarm is > 8 hr then start to shift to red 
-        hue = min(240, (abs(self.next_alarm - self.time_displayed) / timedelta(hours=1)) * 30)
+        # Blue when alarm is < 8 hr then start to shift to red using f(x) = x^2 * 3.6
+        hue = min(240,  (abs(self.next_alarm - self.time_displayed) / timedelta(hours=1))**2 * 3.6)       
 
         hue_start = hue
         saturation_start = self.saturation
