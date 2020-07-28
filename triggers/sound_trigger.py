@@ -11,6 +11,7 @@ class SoundTrigger:
     songs_path = None
     songs_selection_type = "AllRandom"
     songs_category = None   
+    random_songs_category = None  
     single_song_path = None
     next_song = None
     selection_type_by_alarm_type = []
@@ -23,7 +24,7 @@ class SoundTrigger:
     def dump_runtime(self):
         self.runtime_updated = False
         runtime = { 
-            "songsCategory": self.songs_category,
+            "songsCategory": self.random_songs_category,
             "lastCategoryFetch": self.last_category_fetch.isoformat(),
             "lastSongUpdated": self.last_song_updated.isoformat()
             }
@@ -35,7 +36,7 @@ class SoundTrigger:
     def load_runtime(self, runtime):
         if runtime is not None:
             if "songsCategory" in runtime:
-                self.songs_category = runtime["songsCategory"]
+                self.random_songs_category = runtime["songsCategory"]
             if "lastCategoryFetch" in runtime:
                 self.last_category_fetch = datetime.fromisoformat(runtime["lastCategoryFetch"])
             if "lastSongUpdated" in runtime:
@@ -46,7 +47,9 @@ class SoundTrigger:
         if "songsSelectionType" in configuration:
             self.songs_selection_type = configuration["songsSelectionType"]
         if "singleSongPath" in configuration:
-            self.single_song_path = configuration["singleSongPath"]      
+            self.single_song_path = configuration["singleSongPath"]     
+        if "songsCategory" in configuration:
+            self.songs_category = configuration["songsCategory"] 
         self.selection_type_by_alarm_type.clear()
         if "selectionTypeByAlarmType" in configuration:
             for alarm_type in configuration["selectionTypeByAlarmType"]:
@@ -59,10 +62,7 @@ class SoundTrigger:
                 self.selection_type_by_alarm_type.append(selection)
         if "demoPath" in configuration:
             self.demo_path = configuration["demoPath"]
-        self.load_runtime(runtime)
-        # Load after runtime to force value if specified
-        if "songsCategory" in configuration:
-            self.songs_category = configuration["songsCategory"]
+        self.load_runtime(runtime)        
 
     def __init__(self, configuration, runtime):
         self.load_configuration(configuration, runtime)
@@ -90,7 +90,7 @@ class SoundTrigger:
             date_difference = (datetime.now() - self.last_category_fetch).days
             if date_difference > 7 or (datetime.today().weekday() == 0 and date_difference >= 1):
                 self.select_random_category()
-            self.select_random_song_in_path(os.path.join(self.songs_path,self.songs_category))
+            self.select_random_song_in_path(os.path.join(self.songs_path,self.random_songs_category))
         else:
             self.select_random_song_in_path(self.songs_path)
         self.song_object = vlc.MediaPlayer(self.next_song)   
@@ -99,8 +99,8 @@ class SoundTrigger:
 
     def select_random_category(self):
         dirs = next(os.walk(self.songs_path))[1]
-        self.songs_category = dirs[random.randrange(len(dirs))]
-        print("Song category is now {0}".format(self.songs_category))
+        self.random_songs_category = dirs[random.randrange(len(dirs))]
+        print("Song category is now {0}".format(self.random_songs_category))
         self.last_category_fetch = datetime.now()
         self.runtime_updated = True
 

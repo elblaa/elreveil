@@ -36,7 +36,7 @@ class LightTrigger(Thread):
     pitch_color_max = 360
     freq_start = 1760 # start of frequencies used with fft (start of equal temperament)
     freq_end = 3520 # end of frequencies used with fft (end of equal temperament)
-    peak_factor = 5
+    peak_factor = 1 #5
     fft_thresold = 1
     saturation = 0.95
     peak_value = 0.95
